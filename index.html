@@ -1,39 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Tracker</title>
+
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-    <div id="loginBox">
+
+<!-- LOGIN -->
+<div id="loginBox">
     <h2>Login 🔐</h2>
     <input type="text" id="username" placeholder="Enter Username">
     <input type="month" id="month">
     <button onclick="login()">Login</button>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none;">
 
     <h1>Budget Tracker 💰</h1>
-    <button onclick="toggleDark()">🌙 Dark Mode</button>
 
+    <button onclick="toggleDark()">🌙 Dark Mode</button>
+    <div class="month-selector">
+    <label>Select Month:</label>
+    <input type="month" id="currentMonth" onchange="changeMonth()">
+
+    <button onclick="setCurrentMonth()">Set Month</button>
+</div>
+    <form id="expenseForm" onsubmit="addExpense(); return false;">
+    
     <div class="container">
-        <input type="text" id="title" placeholder="Enter Expense Name">
-        <input type="number" id="amount" placeholder="Enter Amount">
-        <button onclick="addExpense()">Add Expense</button>
+        <input type="text" id="title" placeholder="Enter Expense Name" onkeydown="handleEnter(event, 'amount')">
+        
+        <input type="number" id="amount" placeholder="Enter Amount" onkeydown="handleEnter(event, 'addBtn')">
+        
+        <button type="button" id="addBtn" onclick="addExpense()">Add Expense</button>
     </div>
 
+</form>
     <h2>Expenses List</h2>
     <ul id="list"></ul>
 
     <div class="chart-box">
-    <canvas id="chart"></canvas>
-</div>
+        <canvas id="chart"></canvas>
+    </div>
 
+    <!-- ✅ Monthly Summary -->
+    <h2>Monthly Summary 📊</h2>
+    <ul id="monthlySummary"></ul>
+
+    <!-- AI Message -->
     <h3 id="ai"></h3>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
 </div>
+
+<script src="script.js"></script>
+
 </body>
 </html>
