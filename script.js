@@ -1,72 +1,88 @@
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 let chart;
 
+// LOGIN
+function login() {
+    let user = document.getElementById("username").value;
+    let month = document.getElementById("month").value;
+
+    if (!user || !month) {
+        alert("Please enter username and month");
+        return;
+    }
+
+    localStorage.setItem("user", user);
+    localStorage.setItem("month", month);
+
+    document.getElementById("currentMonth").value = month;
+
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    showExpenses();
+}
+
+// ADD EXPENSE
 function addExpense() {
     let title = document.getElementById("title").value;
     let amount = document.getElementById("amount").value;
+    let month = localStorage.getItem("month");
 
-    if (title === "" || amount === "") {
+    if (!title || !amount) {
         alert("Please fill all fields");
         return;
     }
 
-    let month = document.getElementById("month").value;
-
-let expense = { title, amount, month };
+    let expense = { title, amount, month };
     expenses.push(expense);
 
     localStorage.setItem("expenses", JSON.stringify(expenses));
 
-    showExpenses();
-
     document.getElementById("title").value = "";
     document.getElementById("amount").value = "";
+
+    showExpenses();
 }
 
+// SHOW EXPENSES
 function showExpenses() {
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    let selectedMonth = document.getElementById("month").value;
+    let selectedMonth = localStorage.getItem("month");
 
-expenses.forEach((exp, index) => {
+    // Filter expenses for selected month
+    let filtered = expenses.filter(exp => exp.month === selectedMonth);
 
-    if (selectedMonth && exp.month !== selectedMonth) return;
-
-    let li = document.createElement("li");
-    li.innerHTML = `${exp.title} - ₹${exp.amount} (${exp.month}) 
-    <button onclick="deleteExpense(${index})">❌</button>`;
-    
-    list.appendChild(li);
-});
+    filtered.forEach((exp, index) => {
         let li = document.createElement("li");
-        li.innerHTML = `${exp.title} - ₹${exp.amount} 
+        li.innerHTML = `${exp.title} - ₹${exp.amount} (${exp.month}) 
         <button onclick="deleteExpense(${index})">❌</button>`;
+
         list.appendChild(li);
     });
 
-    showChart();
-    showAI();
+    showChart(filtered); // pass filtered data
+    showAI(filtered);
+    showMonthlySummary();
 }
 
+// DELETE EXPENSE
 function deleteExpense(index) {
     expenses.splice(index, 1);
     localStorage.setItem("expenses", JSON.stringify(expenses));
     showExpenses();
 }
 
-function showChart() {
+// CHART
+function showChart(data) {
     let canvas = document.getElementById("chart");
-    if (!canvas) return;
-
-    let labels = expenses.map(e => e.title);
-    let data = expenses.map(e => Number(e.amount));
-
     let ctx = canvas.getContext("2d");
 
-    if (chart) {
-        chart.destroy();
-    }
+    let labels = data.map(e => e.title);
+    let values = data.map(e => Number(e.amount));
+
+    if (chart) chart.destroy();
 
     chart = new Chart(ctx, {
         type: "bar",
@@ -74,60 +90,80 @@ function showChart() {
             labels: labels,
             datasets: [{
                 label: "Expenses",
-                data: data
+                data: values
             }]
         }
     });
 }
 
-function showAI() {
-    let total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+// AI MESSAGE
+function showAI(data) {
+    let total = data.reduce((sum, e) => sum + Number(e.amount), 0);
 
-    let msg = "";
-
-    if (total > 5000) {
-        msg = "⚠️ You are spending too much!";
-    } else {
-        msg = "✅ Your spending is under control!";
-    }
+    let msg = total > 5000 
+        ? "⚠️ You are spending too much!" 
+        : "✅ Your spending is under control!";
 
     document.getElementById("ai").innerText = msg;
 }
 
-// Page load pe run
-showExpenses();
+// MONTHLY SUMMARY (ALL MONTHS)
+function showMonthlySummary() {
+    let summary = {};
 
+    expenses.forEach(exp => {
+        if (!summary[exp.month]) {
+            summary[exp.month] = 0;
+        }
+        summary[exp.month] += Number(exp.amount);
+    });
 
-// 🔥 BONUS: Enter key navigation
-document.getElementById("title").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
-        document.getElementById("amount").focus();
+    let summaryList = document.getElementById("monthlySummary");
+    if (!summaryList) return;
+
+    summaryList.innerHTML = "";
+
+    for (let month in summary) {
+        let li = document.createElement("li");
+        li.innerText = `${month} → ₹${summary[month]}`;
+        summaryList.appendChild(li);
     }
-});
+}
 
-document.getElementById("amount").addEventListener("keydown", function(e) {
-    if (e.key === "Enter") {
-        e.preventDefault();
-        addExpense();
-    }
-});
+// DARK MODE
 function toggleDark() {
     document.body.classList.toggle("dark");
 }
-localStorage.setItem("user", user);
 
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("app").style.display = "block";
-}
-
+// AUTO LOGIN CHECK
 function checkLogin() {
     let user = localStorage.getItem("user");
+    let month = localStorage.getItem("month");
 
     if (user) {
         document.getElementById("loginBox").style.display = "none";
         document.getElementById("app").style.display = "block";
+
+        document.getElementById("currentMonth").value = month;
+
+        showExpenses();
     }
 }
-
-// Page load ke baad check karega
 checkLogin();
+function handleEnter(event, nextId) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById(nextId).focus();
+    }
+}
+function setCurrentMonth() {
+    let month = document.getElementById("currentMonth").value;
+
+    if (!month) {
+        alert("Please select a month");
+        return;
+    }
+
+    localStorage.setItem("month", month);
+    showExpenses();
+}
