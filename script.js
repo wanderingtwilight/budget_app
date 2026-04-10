@@ -1,3 +1,4 @@
+let limit = localStorage.getItem("limit") || 0;
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 let chart;
 
@@ -97,12 +98,16 @@ function showChart(data) {
 }
 
 // AI MESSAGE
-function showAI(data) {
-    let total = data.reduce((sum, e) => sum + Number(e.amount), 0);
+function showAI() {
+    let total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 
-    let msg = total > 5000 
-        ? "⚠️ You are spending too much!" 
-        : "✅ Your spending is under control!";
+    let msg = "";
+
+    if (limit > 0 && total > limit) {
+        msg = "⚠️ You crossed your monthly limit!";
+    } else {
+        msg = "✅ You are within your limit";
+    }
 
     document.getElementById("ai").innerText = msg;
 }
@@ -167,3 +172,22 @@ function setCurrentMonth() {
     localStorage.setItem("month", month);
     showExpenses();
 }
+
+function setLimit() {
+    let inputLimit = document.getElementById("limit").value;
+
+    if (inputLimit === "") {
+        alert("Enter limit");
+        return;
+    }
+
+    limit = Number(inputLimit);
+    localStorage.setItem("limit", limit);
+
+    showLimit();
+}
+function showLimit() {
+    document.getElementById("limitDisplay").innerText = 
+        "Monthly Limit: ₹" + limit;
+}
+showLimit();
