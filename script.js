@@ -1,4 +1,3 @@
-let limit = localStorage.getItem("limit") || 0;
 let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
 let chart;
 
@@ -22,7 +21,16 @@ function login() {
 
     showExpenses();
 }
+// AI MESSAGE
+function showAI(data) {
+    let total = data.reduce((sum, e) => sum + Number(e.amount), 0);
 
+    let msg = total > 5000 
+        ? "⚠️ You are spending too much!" 
+        : "✅ Your spending is under control!";
+
+    document.getElementById("ai").innerText = msg;
+}
 // ADD EXPENSE
 function addExpense() {
     let title = document.getElementById("title").value;
@@ -97,20 +105,6 @@ function showChart(data) {
     });
 }
 
-// AI MESSAGE
-function showAI() {
-    let total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-
-    let msg = "";
-
-    if (limit > 0 && total > limit) {
-        msg = "⚠️ You crossed your monthly limit!";
-    } else {
-        msg = "✅ You are within your limit";
-    }
-
-    document.getElementById("ai").innerText = msg;
-}
 
 // MONTHLY SUMMARY (ALL MONTHS)
 function showMonthlySummary() {
@@ -172,22 +166,53 @@ function setCurrentMonth() {
     localStorage.setItem("month", month);
     showExpenses();
 }
+let limit = 0;
 
 function setLimit() {
-    let inputLimit = document.getElementById("limit").value;
+    let input = document.getElementById("limitInput").value;
 
-    if (inputLimit === "") {
-        alert("Enter limit");
+    if (input === "" || input <= 0) {
+        alert("Please enter valid limit");
         return;
     }
 
-    limit = Number(inputLimit);
-    localStorage.setItem("limit", limit);
+    limit = input;
 
-    showLimit();
+    document.getElementById("showLimit").innerText = "Monthly Limit: ₹" + limit;
+
+    localStorage.setItem("limit", limit); // save
 }
-function showLimit() {
-    document.getElementById("limitDisplay").innerText = 
-        "Monthly Limit: ₹" + limit;
+
+// page reload ke baad bhi show ho
+window.onload = function() {
+    let savedLimit = localStorage.getItem("limit");
+
+    if (savedLimit) {
+        limit = savedLimit;
+        document.getElementById("showLimit").innerText = "Monthly Limit: ₹" + limit;
+    }
 }
-showLimit();
+function resetData() {
+    let confirmReset = confirm("Are you sure you want to delete all data?");
+
+    if (confirmReset) {
+        // localStorage clear
+        localStorage.clear();
+
+        // variables reset
+        expenses = [];
+        limit = 0;
+
+        // UI reset
+        document.getElementById("list").innerHTML = "";
+        document.getElementById("monthlySummary").innerHTML = "";
+        document.getElementById("showLimit").innerText = "Monthly Limit: ₹0";
+
+        // chart reset (optional)
+        if (chart) {
+            chart.destroy();
+        }
+
+        alert("All data reset successfully!");
+    }
+}
